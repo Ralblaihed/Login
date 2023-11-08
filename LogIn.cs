@@ -50,11 +50,11 @@ namespace LegacyLibrary
 
         private void button1_Click(object sender, EventArgs e)
         {
-            ProjectCode.user ss = new user();
-            user.validusers = new List<user>();
+            ProjectCode.User ss = new User();
+            User.validusers = new List<User>();
             //we wont need this if we connected it to the database
-            user.validusers.Add(new user("sad", "hello"));
-            user found = user.validusers.Find(u => u.Login(txtUsername.Text, txtPassword.Text));
+            User.validusers.Add(new User("sad", "hello"));
+            User found = User.validusers.Find(u => u.Login(txtUsername.Text, txtPassword.Text));
 
             if (found != null)
             {

@@ -47,24 +47,23 @@ namespace LegacyLibrary
             public double Price { get; set; }
             public bool IsBorrowed { get; set; }
             public DateTime BorrowDate { get; set; }
+
             private DateTime expectedReturnDate;
             public static List<Book> BorrowedBooks { get; } = new List<Book>();
             public static List<Book> AvailableBooks { get; } = new List<Book>();
+
             private List<Book> Books = new List<Book>();
+            public int DaysBorrowed { get; set; } //added this to make calculations easier ill add a method later
+
 
             public DateTime ExpectedReturnDate
             {
                 get { return expectedReturnDate; }
                 set
                 {
-                    ExpectedReturnDate = value;
-                    CalculateExpectedReturnDate();
+                    int maxBorrowingPeriod = 30;
+                    expectedReturnDate = BorrowDate.AddDays(maxBorrowingPeriod);
                 }
-            }
-            //this is called in the setter 
-            private void CalculateExpectedReturnDate()
-            {
-                expectedReturnDate = BorrowDate.AddDays(30);
             }
 
             //come back to it
@@ -80,10 +79,32 @@ namespace LegacyLibrary
                 ExpectedReturnDate = DateTime.MinValue;
             }
 
-            public override string ToString()
-            {//fix
-                return "hiiii";
+            public Book(String isbn, String title, String author, String edition, double price, DateTime bd, int db) ///when book is borrowed we'll use this 
+            {
+                ISBN = isbn;
+                Title = title;
+                Author = author;
+                Edition = edition;
+                Price = price;
+                IsBorrowed = true;
+                BorrowDate = bd;
+                ExpectedReturnDate = ExpectedReturnDate;
+                DaysBorrowed = db;
             }
+            public String StatusString()
+            {
+                if (IsBorrowed)
+                    return "Borrowed";
+
+                else
+                    return "Available";
+            }
+
+            public override string ToString()
+            {//fix to fit what we want later 
+                return "The Title of the Book is " + Title + "\nAuthor: " + Author + "  ISBN: " + ISBN + "  Edithon: " + Edition + "  Price: " + Price + "\nThe Book is Currently " + StatusString();
+            }
+
             public static void UpdateBorrowedBooks(Book book)
             {
                 // IsBorrowed = true;
@@ -106,6 +127,9 @@ namespace LegacyLibrary
             //addition
             //is this necessary?
             //method is responsible for displaying the state (borrowed or available) of each book in the provided list b with book title
+
+            //not sure this method is needed since i added a StringStatus method that displays 
+            //the book status if borrowed or available
             public void ViewBookState()
             {
                 foreach (var book in Books)
@@ -121,6 +145,7 @@ namespace LegacyLibrary
                 }
             }
             //returns a list of all the borrowed books
+
             public List<Book> GetBorrowedBooks()
             {
                 //List<Book> borrowedBooks = Books.FindAll(book => book.IsBorrowed);
@@ -133,10 +158,13 @@ namespace LegacyLibrary
 
                 return Book.AvailableBooks;
             }
+
+
             //called from borrower and librarian class
             //goes thru list b based on the books given ISBN 
             //if the boook is found in the list it searches if its borrowed or not
             //then if foundbook is empty then it gives an error message
+            //I removed this from my code tra bs mdri lw you called it somewhere aw la
             public virtual void UpdateBookStatus(List<Book> b, string isbn, bool isBorrowed, DateTime borrowDate, DateTime expectedReturnDate) //removed lists
             {
                 Book foundBook = Books.Find(book => book.ISBN == isbn);
@@ -166,23 +194,24 @@ namespace LegacyLibrary
                 {
                     Console.WriteLine("Book not found in the library.");
                 }
-            }
+            }//come back to this
 
         }
 
 
-        public class user : System
+        public class User : System
         {
             public string Username { get; set; }
             public string Password { get; set; }
-            int ID { get; set; }
+            public int ID { get; set; }
             public string TypeUser { get; set; }
-            int PhoneNumber { get; set; }
+            public int PhoneNumber { get; set; }
             public string Email { get; set; }
-            public static List<user> validusers;
+
+            public static List<User> validusers;
 
 
-            public user(string username, string password, int id, string typeUser, int phoneNumber, string email)
+            public User(string username, string password, int id, string typeUser, int phoneNumber, string email)
             {
                 Username = username;
                 Password = password;
@@ -190,29 +219,33 @@ namespace LegacyLibrary
                 TypeUser = typeUser;
                 PhoneNumber = phoneNumber;
                 Email = email;
+                validusers.Add(new User(username, password, id, typeUser, phoneNumber, email));
+
             }
 
-            public user(string username,string password)
+            //why do we need this?
+            public User(string username,string password)
             {
                 Username = username;
                 Password = password;
             }
 
-            public user()
+            public User()
             {
-                validusers = new List<user>();
+                validusers = new List<User>();
             }
+
             public bool Login(string inputUsername,string inputPassword)
             {
-                //here are they local varaibles or 
-              //  Console.WriteLine("Enter your username:");
-                //string inputUsername = Console.ReadLine();
+               //here are they local varaibles or 
+               //  Console.WriteLine("Enter your username:");
+               //string inputUsername = Console.ReadLine();
 
                // Console.WriteLine("Enter your password:");
                // string inputPassword = Console.ReadLine();
 
 
-                 user validUser = validusers.FirstOrDefault(user => user.Username == inputUsername && user.Password == inputPassword);
+                User validUser = validusers.FirstOrDefault(user => user.Username == inputUsername && user.Password == inputPassword);
 
                 if (validUser != null)
                 {
@@ -255,7 +288,7 @@ namespace LegacyLibrary
                     Console.WriteLine("Enter your email:");
                     string inputEmail = Console.ReadLine();
 
-                    user newUser = new user(inputUsername, inputPassword, inputId, inputUserType, inputPhoneNumber, inputEmail);
+                    User newUser = new User(inputUsername, inputPassword, inputId, inputUserType, inputPhoneNumber, inputEmail);
 
                     // Add the new user to the list of valid users
                     validusers.Add(newUser);
@@ -264,47 +297,94 @@ namespace LegacyLibrary
 
                 }
             }
+
+            public  Boolean SearchBook(List<Book> b, Book b1)
+            {
+                Boolean flag = false;
+                if (Book.BorrowedBooks.Contains(b1))
+                {
+                    Console.WriteLine($"{b1.Title} is borrowed");
+                    flag = true;
+                }
+                else if (Book.AvailableBooks.Contains(b1))
+                {
+                    Console.WriteLine($"{b1.Title} is available");
+                    flag = false;
+                }
+                else
+                    Console.WriteLine($"{b1.Title} is not found in the library");
+
+                return flag;
+            }
+
+            public void ViewBookState(Book b)
+            {
+                Console.WriteLine("Book is currently " + b.StatusString());
+            }
+
+            public override string ToString()
+            {
+                return $"Username = {Username};\n" + $"Password = {Password};\n" + $"ID = {ID};\n" + $"TypeUser = {TypeUser};\n" + $"PhoneNumber = {PhoneNumber};\n" + $"Email = {Email};";
+            }
+
         }
 
 
-        public class Librarian : user
+        public class Librarian : User
         {
-            public user LibrarianUser;
-            public Book LibrarianBook;
-
+            //why
+            public User LibrarianUser;
+            public Book LibrarianBook { get; set; }
+            //why
             List<Book> books = new List<Book>();
             public Librarian(string username, string password, int id, string typeUser, int phoneNumber, string email) : base(username, password, id, typeUser, phoneNumber, email)
             {
 
             }
 
+            public void AddBook(Book book)
+            {
+                if (!book.IsBorrowed)
+                    Book.AvailableBooks.Add(book);
+
+                else
+                    Book.BorrowedBooks.Add(book);
+            }
+
             //goes thru list b based on the books given ISBN 
             //if the boook is found in the list it searches if its borrowed or not
             //then if foundbook is empty then it gives an error message
+            
             public void UpdateStatus(List<Book> b, string isbn, bool isBorrowed, DateTime borrowDate, DateTime expectedReturnDate) //removed lists
             {
                 LibrarianBook.UpdateBookStatus(b, isbn, isBorrowed, borrowDate, expectedReturnDate);
             }
+
+            //update list method
+            //search book method
+            //tostring?
         }
 
 
 
-        public class Borrower : user
+        public class Borrower : User
         {   //shall i keep this or do private user and pass for each account type
             public System BorrowerUser;
-            public Book BorrowerBook;
-            // public List<Book> BorrowedBooks { get; set; }
-            private string username;
-            private string password;
+            public int CountFine { get; set; }
 
+            public Book BorrowerBook { get; set; }
+            // public List<Book> BorrowedBooks { get; set; }
 
 
             public Borrower(String username, String password, int iD, String typeUser, int phoneNumber, String email) : base() //removed lists
             {
+                CountFine = 0;
                 // BorrowedBooks = new List<Book>();
             }
             //searches for the specific  book b1 based on the ISBN in list b
             //it tells you whether thebook in the list is borrwed or not
+
+            //come back to it
             public Boolean SearchBook(List<Book> b, Book b1)
             {
                 Boolean flag = false;
@@ -337,7 +417,7 @@ namespace LegacyLibrary
                 {
                     Book.UpdateBorrowedBooks(book);
                     //add username field
-                    Console.WriteLine($"{book.Title} is borrowed by.");
+                    Console.WriteLine($"{book.Title} is borrowed by {Username}.");
                 }
 
             }
@@ -370,7 +450,7 @@ namespace LegacyLibrary
                 if (isBorrowed)
                 {
                     //add username field
-                    Console.WriteLine($"Borrowed books by :");
+                    Console.WriteLine($"Borrowed books by {Username}:");
 
                     //here it replaced method viewborrowedbooks
                     foreach (var book in Book.BorrowedBooks)
@@ -405,7 +485,19 @@ namespace LegacyLibrary
 
                 Console.WriteLine($"Total fine for : {totalFine} SAR");
             }
+
+            public void CanceleMembership(Borrower b)
+            {
+                if (CountFine >= 3)
+                {
+                    Console.WriteLine("your membership is canceled");
+                    validusers.Remove(b);
+                }
+            }
         }
+        //search book method
+        //veiw borrowed date for book i want i think
+        //tostring?
     }
 }
 
